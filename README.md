@@ -34,7 +34,7 @@ Certifique-se de ter o Python 3.x instalado em seu sistema. Você pode baixar o 
 
 3. Execute o aplicativo:
    ```bash
-   python seu_script.py
+   python index.py
    ```
 
 ## Como Usar
