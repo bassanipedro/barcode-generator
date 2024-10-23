@@ -19,8 +19,14 @@ class BarcodeGeneratorApp:
         self.default_codes = ["ABC123", "DEF456", "GHI789", "JKL012", "MNO345"]
         self.text_area.insert(tk.END, "\n".join(self.default_codes))
 
-        self.generate_button = tk.Button(master, text="Gerar Códigos de Barras", command=self.generate_barcodes)
-        self.generate_button.pack(pady=10)
+        button_frame = tk.Frame(master)
+        button_frame.pack(pady=10)
+
+        self.generate_button = tk.Button(button_frame, text="Gerar Códigos de Barras", command=self.generate_barcodes)
+        self.zpl_button = tk.Button(button_frame, text="Gerar Texto ZPL", command=self.generate_zpl)
+
+        self.generate_button.pack(side=tk.LEFT, padx=5)
+        self.zpl_button.pack(side=tk.LEFT, padx=5)
 
         self.image_objects = []
         self.current_index = 0
@@ -50,6 +56,31 @@ class BarcodeGeneratorApp:
             self.show_generated_barcode()
         else:
             messagebox.showinfo("Atenção", "Nenhum código de barras foi gerado.")
+
+    def generate_zpl(self):
+        codes = self.text_area.get("1.0", tk.END).strip().splitlines()
+        zpl_text = ""
+
+        for code in codes:
+            if code:
+                zpl_text += f"^XA\n^BY2\n^B3N,N,100,Y,N\n^FD{code}^FS\n^XZ\n"
+
+        if zpl_text:
+            self.show_zpl(zpl_text)
+        else:
+            messagebox.showinfo("Atenção", "Nenhum código ZPL gerado.")
+
+    def show_zpl(self, zpl_text):
+        new_window = Toplevel(self.master)
+        new_window.title("Texto ZPL Gerado")
+
+        label_zpl = tk.Label(new_window, text="Texto ZPL gerado:", justify=tk.LEFT)
+        label_zpl.pack(pady=10)
+
+        text_zpl_area = tk.Text(new_window, height=15, width=50)
+        text_zpl_area.pack(padx=10, pady=10)
+        text_zpl_area.insert(tk.END, zpl_text)
+        text_zpl_area.config(state=tk.DISABLED)
 
     def show_generated_barcode(self):
         new_window = Toplevel(self.master)
