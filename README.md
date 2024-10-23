@@ -23,8 +23,8 @@ Certifique-se de ter o Python 3.x instalado em seu sistema. Você pode baixar o 
 
 1. Clone o repositório:
    ```bash
-   git clone <URL_DO_REPOSITORIO>
-   cd <NOME_DO_DIRETORIO>
+   git clone https://github.com/bassanipedro/barcode-generator
+   cd barcode-generator
    ```
 
 2. Instale as dependências:
