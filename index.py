@@ -3,7 +3,7 @@ from tkinter import Toplevel, Scrollbar, Canvas, Frame, messagebox
 import barcode
 from barcode.writer import ImageWriter
 from PIL import Image, ImageTk
-import os
+import io
 import re
 
 class BarcodeGeneratorApp:
@@ -24,33 +24,31 @@ class BarcodeGeneratorApp:
         self.generate_button.pack(pady=10)
 
         self.image_references = []
-        self.codes_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'codes')
-        os.makedirs(self.codes_directory, exist_ok=True)
 
     def generate_barcodes(self):
         codes = self.text_area.get("1.0", tk.END).strip().splitlines()
-        image_paths = []
+        image_objects = []
 
         for code in codes:
             if code:
                 try:
-                    safe_code = re.sub(r'[^a-zA-Z0-9]', '_', code)
-                    image_path = os.path.join(self.codes_directory, f'barcode_{safe_code}')
-
                     barcode_instance = barcode.get('code128', code, writer=ImageWriter())
-                    barcode_instance.save(image_path)
+                    buffer = io.BytesIO()
+                    barcode_instance.write(buffer)
+                    buffer.seek(0)
 
-                    image_paths.append(image_path + ".png")
+                    img = Image.open(buffer)
+                    image_objects.append(img)
 
                 except Exception as e:
                     messagebox.showerror("Erro", f"Erro ao gerar o código de barras: {e}")
 
-        if image_paths:
-            self.show_generated_barcodes(image_paths)
+        if image_objects:
+            self.show_generated_barcodes(image_objects)
         else:
             messagebox.showinfo("Atenção", "Nenhum código de barras foi gerado.")
     
-    def show_generated_barcodes(self, image_paths):
+    def show_generated_barcodes(self, image_objects):
         new_window = Toplevel(self.master)
         new_window.title("Códigos de Barras Gerados")
 
@@ -71,9 +69,8 @@ class BarcodeGeneratorApp:
 
         canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
 
-        for image_path in image_paths:
+        for img in image_objects:
             try:
-                img = Image.open(image_path)
                 img = img.resize((300, int(300 * img.height / img.width)), Image.LANCZOS)
                 photo = ImageTk.PhotoImage(img)
 
