@@ -42,3 +42,11 @@ Certifique-se de ter o Python 3.x instalado em seu sistema. Você pode baixar o 
 1. Ao abrir o aplicativo, insira os códigos de barras no campo de texto (um código por linha).
 2. Clique no botão "Gerar Códigos de Barras".
 3. Uma nova janela será aberta exibindo as imagens geradas.
+
+## Gerar executável
+
+Para gerar um executável do aplicativo, use o comando abaixo:
+
+```bash
+pyinstaller --noconfirm --onefile --windowed --icon "\assets\barcode.ico" --name "Barcode Generator" "barcode-generator\index.py"
+```

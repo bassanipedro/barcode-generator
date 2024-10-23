@@ -32,7 +32,9 @@ class BarcodeGeneratorApp:
         for code in codes:
             if code:
                 try:
+                    font_path = "C:/Windows/Fonts/arial.ttf"
                     barcode_instance = barcode.get('code128', code, writer=ImageWriter())
+                    barcode_instance.writer.font_path = font_path
                     buffer = io.BytesIO()
                     barcode_instance.write(buffer)
                     buffer.seek(0)
