@@ -63,7 +63,7 @@ class BarcodeGeneratorApp:
 
         for code in codes:
             if code:
-                zpl_text += f"^XA\n^BY2\n^B3N,N,100,Y,N\n^FD{code}^FS\n^XZ\n"
+                zpl_text += f"^XA^PR6,6,2^PW789\n^FO70,440^BCN,120,Y,N,N^FD{code}^FS\n^PQ1^XZ\n\n"
 
         if zpl_text:
             self.show_zpl(zpl_text)
