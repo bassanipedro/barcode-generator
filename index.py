@@ -1,10 +1,9 @@
 import tkinter as tk
-from tkinter import Toplevel, Scrollbar, Canvas, Frame, messagebox
+from tkinter import Toplevel, messagebox
 import barcode
 from barcode.writer import ImageWriter
 from PIL import Image, ImageTk
 import io
-import re
 
 class BarcodeGeneratorApp:
     def __init__(self, master):
@@ -17,17 +16,18 @@ class BarcodeGeneratorApp:
         self.text_area = tk.Text(master, height=10, width=50)
         self.text_area.pack(padx=10, pady=10)
 
-        self.default_code = "ABC123"
-        self.text_area.insert(tk.END, self.default_code)
+        self.default_codes = ["ABC123", "DEF456", "GHI789", "JKL012", "MNO345"]
+        self.text_area.insert(tk.END, "\n".join(self.default_codes))
 
         self.generate_button = tk.Button(master, text="Gerar Códigos de Barras", command=self.generate_barcodes)
         self.generate_button.pack(pady=10)
 
-        self.image_references = []
+        self.image_objects = []
+        self.current_index = 0
 
     def generate_barcodes(self):
         codes = self.text_area.get("1.0", tk.END).strip().splitlines()
-        image_objects = []
+        self.image_objects = []
 
         for code in codes:
             if code:
@@ -38,50 +38,67 @@ class BarcodeGeneratorApp:
                     buffer.seek(0)
 
                     img = Image.open(buffer)
-                    image_objects.append(img)
+                    self.image_objects.append(img)
 
                 except Exception as e:
                     messagebox.showerror("Erro", f"Erro ao gerar o código de barras: {e}")
 
-        if image_objects:
-            self.show_generated_barcodes(image_objects)
+        if self.image_objects:
+            self.current_index = 0
+            self.show_generated_barcode()
         else:
             messagebox.showinfo("Atenção", "Nenhum código de barras foi gerado.")
-    
-    def show_generated_barcodes(self, image_objects):
+
+    def show_generated_barcode(self):
         new_window = Toplevel(self.master)
-        new_window.title("Códigos de Barras Gerados")
+        new_window.title("Código de Barras Gerado")
 
-        canvas = Canvas(new_window)
-        scrollbar = Scrollbar(new_window, orient="vertical", command=canvas.yview)
-        scrollable_frame = Frame(canvas)
+        self.label_img = tk.Label(new_window)
+        self.label_img.pack(pady=10)
 
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
+        self.show_image()
 
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
+        button_frame = tk.Frame(new_window)
+        button_frame.pack(side=tk.BOTTOM, fill=tk.X)
 
-        scrollbar.pack(side="right", fill="y")
-        canvas.pack(side="left", fill="both", expand=True)
+        self.back_button = tk.Button(button_frame, text="Voltar", command=self.prev_image)
+        self.next_button = tk.Button(button_frame, text="Próximo", command=self.next_image)
 
-        canvas.bind_all("<MouseWheel>", lambda event: canvas.yview_scroll(int(-1*(event.delta/120)), "units"))
+        self.back_button.pack(side=tk.LEFT, padx=5, pady=5)
+        self.next_button.pack(side=tk.RIGHT, padx=5, pady=5)
 
-        for img in image_objects:
-            try:
-                img = img.resize((300, int(300 * img.height / img.width)), Image.LANCZOS)
-                photo = ImageTk.PhotoImage(img)
+        self.update_button_visibility()
 
-                label_img = tk.Label(scrollable_frame, image=photo)
-                label_img.image = photo
-                label_img.pack(pady=5)
+    def show_image(self):
+        img = self.image_objects[self.current_index]
+        img = img.resize((300, int(300 * img.height / img.width)), Image.LANCZOS)
+        photo = ImageTk.PhotoImage(img)
+        
+        self.label_img.config(image=photo)
+        self.label_img.image = photo
 
-                self.image_references.append(photo)
+    def next_image(self):
+        if self.current_index < len(self.image_objects) - 1:
+            self.current_index += 1
+            self.show_image()
+            self.update_button_visibility()
 
-            except Exception as e:
-                messagebox.showerror("Erro", f"Erro ao carregar a imagem: {e}")
+    def prev_image(self):
+        if self.current_index > 0:
+            self.current_index -= 1
+            self.show_image()
+            self.update_button_visibility()
+
+    def update_button_visibility(self):
+        if self.current_index == 0:
+            self.back_button.pack_forget()
+        else:
+            self.back_button.pack(side=tk.LEFT, padx=5)
+
+        if self.current_index >= len(self.image_objects) - 1:
+            self.next_button.pack_forget() 
+        else:
+            self.next_button.pack(side=tk.RIGHT, padx=5)
 
 if __name__ == "__main__":
     root = tk.Tk()
