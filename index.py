@@ -1,5 +1,5 @@
 import tkinter as tk
-from tkinter import Toplevel, messagebox
+from tkinter import messagebox
 import barcode
 from barcode.writer import ImageWriter
 from PIL import Image, ImageTk
@@ -9,27 +9,45 @@ class BarcodeGeneratorApp:
     def __init__(self, master):
         self.master = master
         self.master.title("Gerador de Códigos de Barras")
+        self.master.geometry("400x600")
+        self.master.configure(bg="#f7f7f7")
 
-        self.label = tk.Label(master, text="Insira os códigos de barras (um por linha):")
+        self.label = tk.Label(master, text="Insira os códigos de barras (um por linha):", bg="#f7f7f7", font=("Arial", 10))
         self.label.pack(pady=10)
 
-        self.text_area = tk.Text(master, height=10, width=50)
+        self.text_area = tk.Text(master, height=10, width=50, font=("Arial", 10), wrap=tk.WORD)
         self.text_area.pack(padx=10, pady=10)
+        self.text_area.configure(bg="#ffffff", fg="#000000", bd=2, relief="groove")
 
         self.default_codes = ["ABC123", "DEF456", "GHI789", "JKL012", "MNO345"]
         self.text_area.insert(tk.END, "\n".join(self.default_codes))
 
-        button_frame = tk.Frame(master)
+        button_frame = tk.Frame(master, bg="#f7f7f7")
         button_frame.pack(pady=10)
 
-        self.generate_button = tk.Button(button_frame, text="Gerar Códigos de Barras", command=self.generate_barcodes)
-        self.zpl_button = tk.Button(button_frame, text="Gerar Texto ZPL", command=self.generate_zpl)
+        self.generate_button = tk.Button(button_frame, text="Gerar Códigos de Barras", command=self.generate_barcodes, font=("Arial", 10), bg="#4CAF50", fg="white", bd=0)
+        self.zpl_button = tk.Button(button_frame, text="Gerar Texto ZPL", command=self.generate_zpl, font=("Arial", 10), bg="#2196F3", fg="white", bd=0)
 
         self.generate_button.pack(side=tk.LEFT, padx=5)
         self.zpl_button.pack(side=tk.LEFT, padx=5)
 
+        self.image_frame = tk.Frame(master, bg="#f7f7f7")
+        self.image_frame.pack(pady=10)
+
+        self.label_img = tk.Label(self.image_frame, bg="#f7f7f7")
+        self.label_img.pack()
+
+        self.back_button = tk.Button(master, text="Voltar", command=self.prev_image, font=("Arial", 10), bg="#FFC107", fg="black", bd=0)
+        self.next_button = tk.Button(master, text="Próximo", command=self.next_image, font=("Arial", 10), bg="#FFC107", fg="black", bd=0)
+
+        self.back_button.pack(side=tk.LEFT, padx=5, pady=10)
+        self.next_button.pack(side=tk.RIGHT, padx=5, pady=10)
+
         self.image_objects = []
         self.current_index = 0
+
+        self.back_button.pack_forget()
+        self.next_button.pack_forget()
 
     def generate_barcodes(self):
         codes = self.text_area.get("1.0", tk.END).strip().splitlines()
@@ -53,9 +71,11 @@ class BarcodeGeneratorApp:
 
         if self.image_objects:
             self.current_index = 0
-            self.show_generated_barcode()
+            self.show_image()
+            self.update_button_visibility()
         else:
             messagebox.showinfo("Atenção", "Nenhum código de barras foi gerado.")
+            self.update_button_visibility()
 
     def generate_zpl(self):
         codes = self.text_area.get("1.0", tk.END).strip().splitlines()
@@ -66,47 +86,33 @@ class BarcodeGeneratorApp:
                 zpl_text += f"^XA^PR6,6,2^PW789\n^FO70,440^BCN,120,Y,N,N^FD{code}^FS\n^PQ1^XZ\n\n"
 
         if zpl_text:
-            self.show_zpl(zpl_text)
+            self.show_zpl_window(zpl_text)
         else:
             messagebox.showinfo("Atenção", "Nenhum código ZPL gerado.")
 
-    def show_zpl(self, zpl_text):
-        new_window = Toplevel(self.master)
-        new_window.title("Texto ZPL Gerado")
+    def show_zpl_window(self, zpl_text):
+        zpl_window = tk.Toplevel(self.master)
+        zpl_window.title("Texto ZPL Gerado")
+        zpl_window.geometry("400x300")
 
-        label_zpl = tk.Label(new_window, text="Texto ZPL gerado:", justify=tk.LEFT)
-        label_zpl.pack(pady=10)
+        label = tk.Label(zpl_window, text="Texto ZPL gerado:", font=("Arial", 10))
+        label.pack(pady=10)
 
-        text_zpl_area = tk.Text(new_window, height=15, width=50)
-        text_zpl_area.pack(padx=10, pady=10)
-        text_zpl_area.insert(tk.END, zpl_text)
-        text_zpl_area.config(state=tk.DISABLED)
+        text_area = tk.Text(zpl_window, height=10, width=50, font=("Arial", 10), wrap=tk.WORD)
+        text_area.pack(padx=10, pady=10)
+        text_area.insert(tk.END, zpl_text)
+        text_area.config(state=tk.NORMAL)
 
-    def show_generated_barcode(self):
-        new_window = Toplevel(self.master)
-        new_window.title("Código de Barras Gerado")
+        close_button = tk.Button(zpl_window, text="Fechar", command=zpl_window.destroy, font=("Arial", 10), bg="#f44336", fg="white")
+        close_button.pack(pady=10)
 
-        self.label_img = tk.Label(new_window)
-        self.label_img.pack(pady=10)
-
-        self.show_image()
-
-        button_frame = tk.Frame(new_window)
-        button_frame.pack(side=tk.BOTTOM, fill=tk.X)
-
-        self.back_button = tk.Button(button_frame, text="Voltar", command=self.prev_image)
-        self.next_button = tk.Button(button_frame, text="Próximo", command=self.next_image)
-
-        self.back_button.pack(side=tk.LEFT, padx=5, pady=5)
-        self.next_button.pack(side=tk.RIGHT, padx=5, pady=5)
-
-        self.update_button_visibility()
+        text_area.focus()
+        text_area.selection_clear(0, tk.END)
 
     def show_image(self):
         img = self.image_objects[self.current_index]
         img = img.resize((300, int(300 * img.height / img.width)), Image.LANCZOS)
         photo = ImageTk.PhotoImage(img)
-        
         self.label_img.config(image=photo)
         self.label_img.image = photo
 
@@ -123,15 +129,14 @@ class BarcodeGeneratorApp:
             self.update_button_visibility()
 
     def update_button_visibility(self):
-        if self.current_index == 0:
-            self.back_button.pack_forget()
-        else:
+        if self.image_objects:
             self.back_button.pack(side=tk.LEFT, padx=5)
-
-        if self.current_index >= len(self.image_objects) - 1:
-            self.next_button.pack_forget() 
-        else:
             self.next_button.pack(side=tk.RIGHT, padx=5)
+            self.back_button.config(state=tk.NORMAL if self.current_index > 0 else tk.DISABLED)
+            self.next_button.config(state=tk.NORMAL if self.current_index < len(self.image_objects) - 1 else tk.DISABLED)
+        else:
+            self.back_button.pack_forget()
+            self.next_button.pack_forget()
 
 if __name__ == "__main__":
     root = tk.Tk()
