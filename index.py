@@ -141,4 +141,5 @@ class BarcodeGeneratorApp:
 if __name__ == "__main__":
     root = tk.Tk()
     app = BarcodeGeneratorApp(root)
+    root.resizable(False, False)
     root.mainloop()
